@@ -13,6 +13,7 @@ struct PortfolioView: View {
     @EnvironmentObject private var vm: HomeViewModel
     @State private var selectedCoin: CoinModel? = nil
     @State private var quantityText: String = ""
+    @State private var showCheckmark: Bool = false
     
     var body: some View {
         NavigationView {
@@ -31,6 +32,9 @@ struct PortfolioView: View {
             .toolbar(content: {
                 ToolbarItem(placement: .navigationBarLeading) {
                     XMarkButton(isPresented: $isPresented)
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    
                 }
             })
         }
@@ -84,7 +88,7 @@ extension PortfolioView {
             }
             Divider()
             HStack {
-                Text("Amount holdings:")
+                Text("Amount holding:")
                 Spacer()
                 TextField("Ex. 1.4", text: $quantityText)
                     .multilineTextAlignment(.trailing)
@@ -100,5 +104,48 @@ extension PortfolioView {
         .animation(.none)
         .padding()
         .font(.headline)
+    }
+    
+    private var trailingNavigationButton: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "checkmark")
+                .opacity(showCheckmark ? 1.0 : 0.0)
+            Button {
+                saveButtonPressed()
+            } label: {
+                Text("Save".uppercased())
+            }
+            .opacity(
+                (selectedCoin != nil && selectedCoin?.currentHoldings != Double(quantityText)) ? 1.0 : 0.0
+            )
+        }
+    }
+    
+    private func saveButtonPressed() {
+        
+        guard let coin = selectedCoin else { return }
+        
+        // save to portfolio
+        
+        // show checkmark
+        withAnimation(.easeIn) {
+            showCheckmark = true
+            removeSelectedCoin()
+        }
+        
+        // hide keyboard
+        UIApplication.shared.endEditing()
+        
+        // hide checkmark
+        DispatchQueue.main.asyncAfter(deadline: .now()+2, execute: {
+            withAnimation(.easeOut) {
+                showCheckmark = false
+            }
+        })
+    }
+    
+    private func removeSelectedCoin() {
+        selectedCoin = nil
+        vm.searchText = ""
     }
 }
